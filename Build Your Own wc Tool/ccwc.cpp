@@ -2,6 +2,7 @@
 #include <fstream>     // For file handling
 #include <cstdio>      // For perror function
 #include <cstdlib>     // For EXIT_FAILURE and EXIT_SUCCESS macros
+#include <sstream>     // For std::istringstream
 
 // Function to count the number of bytes in a file
 void count_bytes(const char* filename) {
@@ -48,15 +49,40 @@ void count_lines(const char* filename) {
     std::cout << line_count << " " << filename << std::endl;
 }
 
+// Function to count the number of words in a file
+void count_words(const char* filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        // Print an error message if the file cannot be opened
+        std::perror("Error opening file");
+        return;
+    }
+
+    // Count the number of words
+    std::string line;
+    std::size_t word_count = 0;
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        std::string word;
+        while (iss >> word) {
+            ++word_count;
+        }
+    }
+    file.close();  // Close the file
+
+    // Print the word count and the filename
+    std::cout << word_count << " " << filename << std::endl;
+}
+
 int main(int argc, char* argv[]) {
     // Check if the number of arguments is correct
     if (argc != 3) {
         // Print the correct usage if the number of arguments is incorrect
-        std::cerr << "Usage: " << argv[0] << " -c|-l <filename>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " -c|-l|-w <filename>" << std::endl;
         return EXIT_FAILURE;
     }
 
-    // Check if the option provided is '-c' or '-l'
+    // Check if the option provided is '-c', '-l', or '-w'
     std::string option = argv[1];
     if (option == "-c") {
         // Call the function to count the bytes in the file
@@ -64,9 +90,12 @@ int main(int argc, char* argv[]) {
     } else if (option == "-l") {
         // Call the function to count the lines in the file
         count_lines(argv[2]);
+    } else if (option == "-w") {
+        // Call the function to count the words in the file
+        count_words(argv[2]);
     } else {
         // Print an error message if the option is invalid
-        std::cerr << "Error: Invalid option. Only '-c' and '-l' are supported." << std::endl;
+        std::cerr << "Error: Invalid option. Only '-c', '-l', and '-w' are supported." << std::endl;
         return EXIT_FAILURE;
     }
 
