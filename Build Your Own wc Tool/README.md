@@ -1,6 +1,6 @@
 # CCWC
 
-`CCWC` (Count Characters, Words, and Lines) is a simple command-line utility for counting characters, words, and lines in a text file or from standard input. It supports multiple options to display different counts.
+`CCWC` is a simple command-line utility for counting characters, words, and lines in a text file or from standard input. It supports multiple options to display different counts.
 
 ## Features
 
