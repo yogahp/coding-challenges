@@ -5,100 +5,93 @@
 #include <sstream>     // For std::istringstream
 #include <locale>      // For locale support
 #include <cwchar>      // For wide character functions
+#include <vector>      // For std::vector
 
-// Function to count the number of bytes in a file or standard input
-void count_bytes(std::istream& stream, std::size_t& byte_count) {
-    std::streampos initial_pos = stream.tellg(); // Save the initial position
-    stream.seekg(0, std::ios::end);              // Move to the end of the stream
-    byte_count = stream.tellg();                 // Get the current position, which is the size of the stream
-    stream.seekg(initial_pos);                   // Restore the initial position
+// Function to count the number of bytes in a buffer
+void count_bytes(const std::vector<char>& buffer, std::size_t& byte_count) {
+    byte_count = buffer.size();
 }
 
-// Function to count the number of lines in a file or standard input
-void count_lines(std::istream& stream, std::size_t& line_count) {
-    std::string line;
+// Function to count the number of lines in a buffer
+void count_lines(const std::vector<char>& buffer, std::size_t& line_count) {
     line_count = 0;
-    while (std::getline(stream, line)) {         // Read each line from the stream
-        ++line_count;                            // Increment the line count
+    for (std::size_t i = 0; i < buffer.size(); ++i) {
+        if (buffer[i] == '\n') {
+            ++line_count;
+        }
     }
 }
 
-// Function to count the number of words in a file or standard input
-void count_words(std::istream& stream, std::size_t& word_count) {
-    std::string line;
+// Function to count the number of words in a buffer
+void count_words(const std::vector<char>& buffer, std::size_t& word_count) {
+    std::istringstream iss(std::string(buffer.begin(), buffer.end()));
+    std::string word;
     word_count = 0;
-    while (std::getline(stream, line)) {         // Read each line from the stream
-        std::istringstream iss(line);            // Create a string stream from the line
-        std::string word;
-        while (iss >> word) {                    // Read each word from the line
-            ++word_count;                        // Increment the word count
-        }
+    while (iss >> word) {
+        ++word_count;
     }
 }
 
-// Function to count the number of characters in a file or standard input, considering multibyte characters
-void count_characters(std::istream& stream, std::size_t& char_count) {
-    std::setlocale(LC_ALL, "");                  // Set the locale to the user's default locale
-
-    std::string line;
+// Function to count the number of characters in a buffer, considering multibyte characters
+void count_characters(const std::vector<char>& buffer, std::size_t& char_count) {
+    std::setlocale(LC_ALL, "");
+    std::mbstate_t state = std::mbstate_t();
+    const char* str = buffer.data();
+    const char* end = str + buffer.size();
     char_count = 0;
-    while (std::getline(stream, line)) {         // Read each line from the stream
-        const char* str = line.c_str();
-        std::mbstate_t state = std::mbstate_t();
-        const char* end = str + line.size();
-        while (str < end) {                      // Process each multibyte character
-            std::size_t len = std::mbrlen(str, end - str, &state);
-            if (len == (std::size_t)-1 || len == (std::size_t)-2) {
-                std::perror("Error processing multibyte character");
-                return;
-            }
-            str += len;
-            ++char_count;                        // Increment the character count
+
+    while (str < end) {
+        std::size_t len = std::mbrlen(str, end - str, &state);
+        if (len == (std::size_t)-1 || len == (std::size_t)-2) {
+            std::perror("Error processing multibyte character");
+            return;
         }
-        ++char_count;                            // Add one for the newline character
+        str += len;
+        ++char_count;
     }
 }
 
-// Function to count lines, words, and bytes in a file or standard input
-void count_all(std::istream& stream) {
+// Function to count lines, words, and bytes in a buffer
+void count_all(const std::vector<char>& buffer, const std::string& filename) {
     std::size_t line_count = 0, word_count = 0, byte_count = 0;
 
-    count_lines(stream, line_count);             // Count lines
-    stream.clear();                              // Clear EOF flag to allow further use of the stream
-    stream.seekg(0);                             // Reset stream position to the beginning
-    count_words(stream, word_count);             // Count words
-    stream.clear();                              // Clear EOF flag to allow further use of the stream
-    stream.seekg(0);                             // Reset stream position to the beginning
-    count_bytes(stream, byte_count);             // Count bytes
+    count_lines(buffer, line_count);
+    count_words(buffer, word_count);
+    count_bytes(buffer, byte_count);
 
-    std::cout << line_count << " " << word_count << " " << byte_count << std::endl;
+    std::cout << line_count << " " << word_count << " " << byte_count;
+    if (!filename.empty()) {
+        std::cout << " " << filename;
+    }
+    std::cout << std::endl;
 }
 
 int main(int argc, char* argv[]) {
-    std::istream* input_stream = &std::cin;      // Default to standard input
+    std::istream* input_stream = &std::cin;
     std::ifstream file;
     std::string filename;
     std::string option;
+    std::vector<char> buffer;
 
     if (argc == 2 && argv[1][0] != '-') {
         // Only filename provided
         filename = argv[1];
-        file.open(filename, std::ios::binary);   // Open the file
+        file.open(filename, std::ios::binary);
         if (!file.is_open()) {
             std::perror("Error opening file");
             return EXIT_FAILURE;
         }
-        input_stream = &file;                    // Use the file as input stream
+        input_stream = &file;
     } else if (argc == 3 && argv[1][0] == '-') {
         // Option and filename provided
         option = argv[1];
         filename = argv[2];
-        file.open(filename, std::ios::binary);   // Open the file
+        file.open(filename, std::ios::binary);
         if (!file.is_open()) {
             std::perror("Error opening file");
             return EXIT_FAILURE;
         }
-        input_stream = &file;                    // Use the file as input stream
+        input_stream = &file;
     } else if (argc == 2 && argv[1][0] == '-') {
         // Only option provided, read from stdin
         option = argv[1];
@@ -108,31 +101,34 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
+    // Read the entire input into a buffer
+    buffer.assign(std::istreambuf_iterator<char>(*input_stream), std::istreambuf_iterator<char>());
+
     if (option == "-c") {
         std::size_t byte_count = 0;
-        count_bytes(*input_stream, byte_count);  // Count bytes
+        count_bytes(buffer, byte_count); // Count bytes
         std::cout << byte_count << (filename.empty() ? "" : " " + filename) << std::endl;
     } else if (option == "-l") {
         std::size_t line_count = 0;
-        count_lines(*input_stream, line_count);  // Count lines
+        count_lines(buffer, line_count); // Count lines
         std::cout << line_count << (filename.empty() ? "" : " " + filename) << std::endl;
     } else if (option == "-w") {
         std::size_t word_count = 0;
-        count_words(*input_stream, word_count);  // Count words
+        count_words(buffer, word_count); // Count words
         std::cout << word_count << (filename.empty() ? "" : " " + filename) << std::endl;
     } else if (option == "-m") {
         std::size_t char_count = 0;
-        count_characters(*input_stream, char_count); // Count characters
+        count_characters(buffer, char_count); // Count characters
         std::cout << char_count << (filename.empty() ? "" : " " + filename) << std::endl;
     } else if (argc == 1 || (argc == 2 && !filename.empty())) {
-        count_all(*input_stream);                // Count lines, words, and bytes
+        count_all(buffer, filename); // Count lines, words, and bytes
     } else {
         std::cerr << "Error: Invalid option. Only '-c', '-l', '-w', and '-m' are supported." << std::endl;
         return EXIT_FAILURE;
     }
 
     if (file.is_open()) {
-        file.close();                            // Close the file if it is open
+        file.close(); // Close the file if it is open
     }
 
     return EXIT_SUCCESS;
