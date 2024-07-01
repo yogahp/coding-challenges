@@ -21,8 +21,6 @@ void count_lines(std::istream& stream, std::size_t& line_count) {
     while (std::getline(stream, line)) {
         ++line_count;
     }
-    stream.clear(); // Clear EOF flag to allow further use of the stream
-    stream.seekg(0); // Reset stream position to the beginning
 }
 
 // Function to count the number of words in a file or standard input
@@ -36,8 +34,6 @@ void count_words(std::istream& stream, std::size_t& word_count) {
             ++word_count;
         }
     }
-    stream.clear(); // Clear EOF flag to allow further use of the stream
-    stream.seekg(0); // Reset stream position to the beginning
 }
 
 // Function to count the number of characters in a file or standard input, considering multibyte characters
@@ -62,8 +58,6 @@ void count_characters(std::istream& stream, std::size_t& char_count) {
         // Add one for the newline character that getline removes
         ++char_count;
     }
-    stream.clear(); // Clear EOF flag to allow further use of the stream
-    stream.seekg(0); // Reset stream position to the beginning
 }
 
 // Function to count lines, words, and bytes in a file or standard input
@@ -71,7 +65,11 @@ void count_all(std::istream& stream) {
     std::size_t line_count = 0, word_count = 0, byte_count = 0;
 
     count_lines(stream, line_count);
+    stream.clear(); // Clear EOF flag to allow further use of the stream
+    stream.seekg(0); // Reset stream position to the beginning
     count_words(stream, word_count);
+    stream.clear(); // Clear EOF flag to allow further use of the stream
+    stream.seekg(0); // Reset stream position to the beginning
     count_bytes(stream, byte_count);
 
     std::cout << line_count << " " << word_count << " " << byte_count << std::endl;
@@ -80,41 +78,54 @@ void count_all(std::istream& stream) {
 int main(int argc, char* argv[]) {
     std::istream* input_stream = &std::cin;
     std::ifstream file;
+    std::string filename;
+    std::string option;
 
-    if (argc == 3) {
-        file.open(argv[2], std::ios::binary);
+    if (argc == 2 && argv[1][0] != '-') {
+        // Only filename provided
+        filename = argv[1];
+        file.open(filename, std::ios::binary);
         if (!file.is_open()) {
             std::perror("Error opening file");
             return EXIT_FAILURE;
         }
         input_stream = &file;
-    } else if (argc != 1 && argc != 2) {
+    } else if (argc == 3 && argv[1][0] == '-') {
+        // Option and filename provided
+        option = argv[1];
+        filename = argv[2];
+        file.open(filename, std::ios::binary);
+        if (!file.is_open()) {
+            std::perror("Error opening file");
+            return EXIT_FAILURE;
+        }
+        input_stream = &file;
+    } else if (argc == 2 && argv[1][0] == '-') {
+        // Only option provided, read from stdin
+        option = argv[1];
+    } else if (argc > 3) {
+        // Incorrect usage
         std::cerr << "Usage: " << argv[0] << " [-c|-l|-w|-m] [<filename>]" << std::endl;
         return EXIT_FAILURE;
-    }
-
-    std::string option;
-    if (argc == 2) {
-        option = argv[1];
     }
 
     if (option == "-c") {
         std::size_t byte_count = 0;
         count_bytes(*input_stream, byte_count);
-        std::cout << byte_count << std::endl;
+        std::cout << byte_count << (filename.empty() ? "" : " " + filename) << std::endl;
     } else if (option == "-l") {
         std::size_t line_count = 0;
         count_lines(*input_stream, line_count);
-        std::cout << line_count << std::endl;
+        std::cout << line_count << (filename.empty() ? "" : " " + filename) << std::endl;
     } else if (option == "-w") {
         std::size_t word_count = 0;
         count_words(*input_stream, word_count);
-        std::cout << word_count << std::endl;
+        std::cout << word_count << (filename.empty() ? "" : " " + filename) << std::endl;
     } else if (option == "-m") {
         std::size_t char_count = 0;
         count_characters(*input_stream, char_count);
-        std::cout << char_count << std::endl;
-    } else if (argc == 1) {
+        std::cout << char_count << (filename.empty() ? "" : " " + filename) << std::endl;
+    } else if (argc == 1 || (argc == 2 && !filename.empty())) {
         count_all(*input_stream);
     } else {
         std::cerr << "Error: Invalid option. Only '-c', '-l', '-w', and '-m' are supported." << std::endl;
