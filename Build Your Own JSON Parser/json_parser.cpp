@@ -9,8 +9,9 @@ bool isValidJson(const std::string& fileContent) {
   trimmedContent.erase(0, trimmedContent.find_first_not_of(" \t\n\r\f\v"));
   trimmedContent.erase(trimmedContent.find_last_not_of(" \t\n\r\f\v") + 1);
 
-  // Regex to match a valid simple JSON object with string keys and values
-  std::regex jsonRegex("\\{\\s*(\"([^\\\"]+)\"\\s*:\\s*\"([^\\\"]*)\"\\s*,\\s*)*(\"([^\\\"]+)\"\\s*:\\s*\"([^\\\"]*)\"\\s*)\\s*\\}");
+  // Regex to match a valid JSON object with string keys and various value types
+  std::regex jsonRegex("\\{\\s*(\"[^\"]+\"\\s*:\\s*(true|false|null|\"[^\"]*\"|[-+]?\\d+(\\.\\d+)?))"
+                       "(\\s*,\\s*\"[^\"]+\"\\s*:\\s*(true|false|null|\"[^\"]*\"|[-+]?\\d+(\\.\\d+)?))*\\s*\\}");
 
   return std::regex_match(trimmedContent, jsonRegex);
 }
