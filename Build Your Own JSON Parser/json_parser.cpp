@@ -1,12 +1,18 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <regex>
 
 bool isValidJson(const std::string& fileContent) {
+  // Remove leading and trailing whitespace
   std::string trimmedContent = fileContent;
   trimmedContent.erase(0, trimmedContent.find_first_not_of(" \t\n\r\f\v"));
   trimmedContent.erase(trimmedContent.find_last_not_of(" \t\n\r\f\v") + 1);
-  return trimmedContent == "{}";
+
+  // Regex to match a valid simple JSON object with string keys and values
+  std::regex jsonRegex("\\{\\s*(\"([^\\\"]+)\"\\s*:\\s*\"([^\\\"]*)\"\\s*,\\s*)*(\"([^\\\"]+)\"\\s*:\\s*\"([^\\\"]*)\"\\s*)\\s*\\}");
+
+  return std::regex_match(trimmedContent, jsonRegex);
 }
 
 int main(int argc, char* argv[]) {
@@ -25,7 +31,7 @@ int main(int argc, char* argv[]) {
   std::string fileContent((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
   if (isValidJson(fileContent)) {
-    std::cout << "Valid JSON: {}" << std::endl;
+    std::cout << "Valid JSON" << std::endl;
     return 0;
   } else {
     std::cerr << "Invalid JSON" << std::endl;
