@@ -1,9 +1,9 @@
 ## Completed Challenges
-- [x] [Coding Challenges - Intro](https://codingchallenges.fyi/challenges/intro)
-- [x] [Build Your Own wc Tool](https://codingchallenges.fyi/challenges/challenge-wc)
-- [x] [Build Your Own JSON Parser](https://codingchallenges.fyi/challenges/challenge-json-parser)
 
 ## Challenges To Do
+- [ ] [Coding Challenges - Intro](https://codingchallenges.fyi/challenges/intro)
+- [ ] [Build Your Own wc Tool](https://codingchallenges.fyi/challenges/challenge-wc)
+- [ ] [Build Your Own JSON Parser](https://codingchallenges.fyi/challenges/challenge-json-parser)
 - [ ] [Build Your Own cut Tool](https://codingchallenges.fyi/challenges/challenge-cut)
 - [ ] [Build Your Own Load Balancer](https://codingchallenges.fyi/challenges/challenge-load-balancer)
 - [ ] [Build Your Own Sort Tool](https://codingchallenges.fyi/challenges/challenge-sort)
