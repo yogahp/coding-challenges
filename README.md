@@ -4,7 +4,6 @@
 - [x] [Build Your Own JSON Parser](https://codingchallenges.fyi/challenges/challenge-json-parser)
 
 ## Challenges To Do
-- [ ] [Build Your Own Compression Tool](https://codingchallenges.fyi/challenges/challenge-huffman) [ LATER ]
 - [ ] [Build Your Own cut Tool](https://codingchallenges.fyi/challenges/challenge-cut)
 - [ ] [Build Your Own Load Balancer](https://codingchallenges.fyi/challenges/challenge-load-balancer)
 - [ ] [Build Your Own Sort Tool](https://codingchallenges.fyi/challenges/challenge-sort)
